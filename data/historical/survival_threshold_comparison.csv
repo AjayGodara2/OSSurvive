@@ -1,0 +1,16 @@
+repo_id,full_name,threshold_months,start_month,end_month,event_month,duration_months,event
+7905539,koral--/android-gif-drawable,6,2013-01,2026-08,2025-01,144,1
+11730342,vuejs/vue,6,2013-07,2026-08,,157,0
+178597005,FyroxEngine/Fyrox,6,2019-03,2026-08,,89,0
+337459381,Ugenteraan/Deep_Hierarchical_Classification,6,2021-02,2026-08,2021-08,6,1
+762147600,SquirrelCorporation/SquirrelServersManager,6,2024-02,2026-08,2026-07,29,1
+7905539,koral--/android-gif-drawable,12,2013-01,2026-08,,163,0
+11730342,vuejs/vue,12,2013-07,2026-08,,157,0
+178597005,FyroxEngine/Fyrox,12,2019-03,2026-08,,89,0
+337459381,Ugenteraan/Deep_Hierarchical_Classification,12,2021-02,2026-08,2024-07,41,1
+762147600,SquirrelCorporation/SquirrelServersManager,12,2024-02,2026-08,,30,0
+7905539,koral--/android-gif-drawable,18,2013-01,2026-08,,163,0
+11730342,vuejs/vue,18,2013-07,2026-08,,157,0
+178597005,FyroxEngine/Fyrox,18,2019-03,2026-08,,89,0
+337459381,Ugenteraan/Deep_Hierarchical_Classification,18,2021-02,2026-08,2025-01,47,1
+762147600,SquirrelCorporation/SquirrelServersManager,18,2024-02,2026-08,,30,0
