@@ -1,5 +1,6 @@
 from pathlib import Path
 from collections import defaultdict
+import subprocess
 
 import pandas as pd
 
@@ -10,7 +11,8 @@ OUTPUT_FILE = Path(
     "data/historical/repository_contributors_monthly.csv"
 )
 
-PILOT_REPOS = 5
+RANDOM_SEED = 42
+MVP_REPOS = 20
 
 
 def get_commit_contributors(repository_path):
@@ -20,8 +22,6 @@ def get_commit_contributors(repository_path):
     Identity is represented as:
         author name + author email
     """
-
-    import subprocess
 
     result = subprocess.run(
         [
@@ -64,127 +64,287 @@ def get_commit_contributors(repository_path):
     return monthly_authors
 
 
+def reconstruct_months(repo, monthly_authors):
+    """Build a continuous monthly contributor timeline."""
+
+    created = pd.to_datetime(
+        repo["created_at"],
+        utc=True,
+    )
+
+    created_month = pd.Timestamp(
+        created.year,
+        created.month,
+        1,
+    )
+
+    # Latest complete month.
+    end_month = (
+        pd.Timestamp.now()
+        .to_period("M")
+        .start_time
+        - pd.offsets.MonthBegin(1)
+    )
+
+    months = pd.date_range(
+        start=created_month,
+        end=end_month,
+        freq="MS",
+    )
+
+    rows = []
+
+    previous_authors = set()
+
+    for month in months:
+
+        month_key = month.strftime("%Y-%m")
+
+        current_authors = monthly_authors.get(
+            month_key,
+            set(),
+        )
+
+        new_authors = (
+            current_authors - previous_authors
+        )
+
+        returning_authors = (
+            current_authors & previous_authors
+        )
+
+        rows.append(
+            {
+                "repo_id": repo["repo_id"],
+                "full_name": repo["full_name"],
+                "language": repo["language"],
+                "month": month_key,
+                "contributors": len(current_authors),
+                "new_contributors": len(new_authors),
+                "returning_contributors": len(
+                    returning_authors
+                ),
+            }
+        )
+
+        previous_authors.update(
+            current_authors
+        )
+
+    return rows
+
+
+def save_results(results):
+    """Save current progress safely."""
+
+    if not results:
+        return
+
+    df = pd.DataFrame(results)
+
+    df = (
+        df.drop_duplicates(
+            subset=["repo_id", "month"]
+        )
+        .sort_values(
+            ["repo_id", "month"]
+        )
+        .reset_index(drop=True)
+    )
+
+    temp_file = OUTPUT_FILE.with_suffix(".tmp")
+
+    df.to_csv(
+        temp_file,
+        index=False,
+    )
+
+    temp_file.replace(OUTPUT_FILE)
+
+
 def main():
 
-    print("Starting OSSurvive contributor history pilot...")
+    print("=" * 70)
+    print("OSSurvive - MVP Historical Contributor Collection")
+    print("=" * 70)
 
     repos = pd.read_csv(REPO_FILE)
 
-    pilot = repos.sample(
-        n=min(PILOT_REPOS, len(repos)),
-        random_state=42,
-    )
+    # Same deterministic 20-repository MVP sample
+    repos = repos.sample(
+        n=min(MVP_REPOS, len(repos)),
+        random_state=RANDOM_SEED,
+    ).reset_index(drop=True)
 
     OUTPUT_FILE.parent.mkdir(
         parents=True,
         exist_ok=True,
     )
 
-    results = []
+    # ---------------------------------------------------------
+    # Load existing progress
+    # ---------------------------------------------------------
 
-    for _, repo in pilot.iterrows():
+    if OUTPUT_FILE.exists():
 
+        existing = pd.read_csv(
+            OUTPUT_FILE
+        )
+
+        completed_repo_ids = set(
+            existing["repo_id"].astype(int)
+        )
+
+        results = existing.to_dict(
+            "records"
+        )
+
+        print(
+            f"\nExisting progress found:"
+        )
+
+        print(
+            f"  Completed repositories: "
+            f"{len(completed_repo_ids)}"
+        )
+
+        print(
+            f"  Existing rows: "
+            f"{len(existing)}"
+        )
+
+    else:
+
+        completed_repo_ids = set()
+        results = []
+
+        print(
+            "\nNo previous contributor dataset found."
+        )
+
+    print(
+        f"\nMVP repositories: "
+        f"{len(repos)}"
+    )
+
+    # ---------------------------------------------------------
+    # Collect contributors
+    # ---------------------------------------------------------
+
+    for index, (_, repo) in enumerate(
+        repos.iterrows(),
+        start=1,
+    ):
+
+        repo_id = int(repo["repo_id"])
         full_name = repo["full_name"]
-        owner = repo["owner"]
-        name = repo["name"]
 
-        print(f"\nProcessing: {full_name}")
+        if repo_id in completed_repo_ids:
+
+            print(
+                f"[{index}/{len(repos)}] "
+                f"SKIP {full_name} "
+                f"(already collected)"
+            )
+
+            continue
+
+        print(
+            f"\n[{index}/{len(repos)}] "
+            f"Processing: {full_name}"
+        )
 
         repository_path = (
-            CLONE_DIR / f"{owner}__{name}"
+            CLONE_DIR
+            / f"{repo['owner']}__{repo['name']}"
         )
 
         if not repository_path.exists():
-            print("  Local repository not found.")
-            print("  Run historical_activity.py first.")
+
+            print(
+                "  Local repository not found."
+            )
+
+            print(
+                "  Run historical_activity.py first."
+            )
+
             continue
 
-        monthly_authors = get_commit_contributors(
-            repository_path
-        )
+        try:
 
-        created = pd.to_datetime(
-            repo["created_at"],
-            utc=True,
-        )
-
-        created_month = pd.Timestamp(
-            created.year,
-            created.month,
-            1,
-        )
-
-        end_month = pd.Timestamp.now().replace(
-            day=1,
-            hour=0,
-            minute=0,
-            second=0,
-            microsecond=0,
-        )
-
-        months = pd.date_range(
-            start=created_month,
-            end=end_month,
-            freq="MS",
-        )
-
-        previous_authors = set()
-
-        for month in months:
-
-            month_key = month.strftime("%Y-%m")
-
-            current_authors = monthly_authors.get(
-                month_key,
-                set(),
+            monthly_authors = (
+                get_commit_contributors(
+                    repository_path
+                )
             )
 
-            new_authors = (
-                current_authors - previous_authors
+            rows = reconstruct_months(
+                repo,
+                monthly_authors,
             )
 
-            returning_authors = (
-                current_authors & previous_authors
+            results.extend(rows)
+
+            completed_repo_ids.add(
+                repo_id
             )
 
-            results.append(
-                {
-                    "repo_id": repo["repo_id"],
-                    "full_name": full_name,
-                    "language": repo["language"],
-                    "month": month_key,
-                    "contributors": len(current_authors),
-                    "new_contributors": len(new_authors),
-                    "returning_contributors": len(
-                        returning_authors
-                    ),
-                }
+            save_results(results)
+
+            total_unique = len(
+                set().union(
+                    *monthly_authors.values()
+                )
+            ) if monthly_authors else 0
+
+            print(
+                f"  Total unique contributors: "
+                f"{total_unique}"
             )
 
-            previous_authors.update(
-                current_authors
+            print(
+                f"  Months reconstructed: "
+                f"{len(rows)}"
             )
 
-        total_unique = len(
-            set().union(
-                *monthly_authors.values()
+            print(
+                f"  Progress: "
+                f"{len(completed_repo_ids)}/"
+                f"{len(repos)}"
             )
-        ) if monthly_authors else 0
 
-        print(
-            f"  Total unique contributors: "
-            f"{total_unique}"
-        )
+        except Exception as error:
 
-        print(
-            f"  Months reconstructed: "
-            f"{len(months)}"
+            print(
+                f"  ERROR: {error}"
+            )
+
+            print(
+                "  Skipping repository and "
+                "continuing safely."
+            )
+
+    # ---------------------------------------------------------
+    # Final dataset
+    # ---------------------------------------------------------
+
+    if not results:
+
+        raise RuntimeError(
+            "No contributor data collected."
         )
 
     df = pd.DataFrame(results)
 
-    df = df.sort_values(
-        ["repo_id", "month"]
+    df = (
+        df.drop_duplicates(
+            subset=["repo_id", "month"]
+        )
+        .sort_values(
+            ["repo_id", "month"]
+        )
+        .reset_index(drop=True)
     )
 
     df.to_csv(
@@ -192,12 +352,12 @@ def main():
         index=False,
     )
 
-    print("\n===================================")
-    print("Contributor history pilot complete")
-    print("===================================")
+    print("\n" + "=" * 70)
+    print("CONTRIBUTOR COLLECTION COMPLETE")
+    print("=" * 70)
 
     print(
-        f"Repositories: "
+        f"\nRepositories: "
         f"{df['repo_id'].nunique()}"
     )
 
@@ -206,13 +366,28 @@ def main():
     )
 
     print(
-        f"Output: {OUTPUT_FILE}"
+        f"Total contributor-months: "
+        f"{df['contributors'].sum()}"
     )
 
-    print("\nPreview:")
+    print(
+        f"Total new contributor-months: "
+        f"{df['new_contributors'].sum()}"
+    )
 
     print(
-        df.head(20).to_string(index=False)
+        f"Total returning contributor-months: "
+        f"{df['returning_contributors'].sum()}"
+    )
+
+    print(
+        f"\nDate range: "
+        f"{df['month'].min()} → "
+        f"{df['month'].max()}"
+    )
+
+    print(
+        f"\nOutput: {OUTPUT_FILE}"
     )
 
 
