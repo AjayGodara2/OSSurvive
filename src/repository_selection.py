@@ -34,8 +34,12 @@ STAR_BANDS = [
 
 MIN_REPOSITORY_AGE_DAYS = 365
 
+# Number we ultimately want from each language/star stratum.
 TARGET_PER_STRATUM = 10
-CANDIDATES_PER_STRATUM = 30
+
+# Search multiple pages to create a broader candidate pool.
+PAGES_PER_STRATUM = 5
+PER_PAGE = 100
 
 RANDOM_SEED = 42
 
@@ -85,7 +89,12 @@ def search_repositories(
     language: str,
     star_range: str,
 ) -> list[dict]:
-    """Search GitHub for repositories in one sampling stratum."""
+    """
+    Search GitHub for repositories in one sampling stratum.
+
+    Multiple pages are collected to create a broader candidate
+    pool before random sampling.
+    """
 
     query = (
         f"language:{language} "
@@ -99,18 +108,35 @@ def search_repositories(
         f"{star_range:<12}"
     )
 
-    results = client.get(
-        "/search/repositories",
-        params={
-            "q": query,
-            "sort": "stars",
-            "order": "desc",
-            "per_page": CANDIDATES_PER_STRATUM,
-            "page": 1,
-        },
-    )
+    candidates = []
 
-    return results.get("items", [])
+    for page in range(1, PAGES_PER_STRATUM + 1):
+
+        results = client.get(
+            "/search/repositories",
+            params={
+                "q": query,
+                "sort": "stars",
+                "order": "desc",
+                "per_page": PER_PAGE,
+                "page": page,
+            },
+        )
+
+        items = results.get("items", [])
+
+        if not items:
+            break
+
+        candidates.extend(items)
+
+        total_count = results.get("total_count", 0)
+
+        # Stop if we have reached the available results.
+        if len(candidates) >= total_count:
+            break
+
+    return candidates
 
 
 # ---------------------------------------------------------
@@ -120,7 +146,7 @@ def search_repositories(
 def main():
 
     print("=" * 70)
-    print("OSSurvive - Resumable Stratified Repository Sampling")
+    print("OSSurvive - Stratified Repository Sampling")
     print("=" * 70)
 
     random.seed(RANDOM_SEED)
@@ -175,6 +201,8 @@ def main():
     total_strata = len(LANGUAGES) * len(STAR_BANDS)
     processed = len(completed_strata)
 
+    stop_requested = False
+
     for language in LANGUAGES:
 
         for star_label, star_range in STAR_BANDS:
@@ -216,7 +244,12 @@ def main():
                     "\nProgress has already been saved."
                 )
 
+                stop_requested = True
                 break
+
+            # -------------------------------------------------
+            # Filter candidates
+            # -------------------------------------------------
 
             candidates = []
 
@@ -239,6 +272,19 @@ def main():
                 candidates.append(metadata)
 
             # -------------------------------------------------
+            # Remove duplicates
+            # -------------------------------------------------
+
+            unique_candidates = {}
+
+            for repo in candidates:
+                unique_candidates[repo["repo_id"]] = repo
+
+            candidates = list(
+                unique_candidates.values()
+            )
+
+            # -------------------------------------------------
             # Random sampling
             # -------------------------------------------------
 
@@ -247,7 +293,7 @@ def main():
             selected = candidates[:TARGET_PER_STRATUM]
 
             print(
-                f"Candidates: {len(candidates):2d} | "
+                f"Candidate pool: {len(candidates):3d} | "
                 f"Selected: {len(selected):2d}"
             )
 
@@ -262,6 +308,7 @@ def main():
             # -------------------------------------------------
 
             completed_strata.add(stratum)
+
             processed += 1
 
             # -------------------------------------------------
@@ -297,13 +344,8 @@ def main():
                 f"Saved progress: {len(df)} repositories"
             )
 
-        else:
-            # Continue to next language.
-            continue
-
-        # Inner loop broke because of rate limit.
-        # Stop the outer loop as well.
-        break
+        if stop_requested:
+            break
 
     # ---------------------------------------------------------
     # Final dataset
