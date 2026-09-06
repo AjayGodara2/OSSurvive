@@ -1,140 +1,186 @@
-import time
+import subprocess
 from pathlib import Path
+from collections import Counter
 
 import pandas as pd
 
-from src.github_client import GitHubClient
-
 
 REPO_FILE = Path("data/raw/repositories.csv")
+CLONE_DIR = Path("data/repositories")
 OUTPUT_FILE = Path("data/historical/repository_activity_monthly.csv")
 
 PILOT_REPOS = 5
 
 
-def get_months(start_date, end_date):
-    """Generate month-start dates between two dates."""
-    months = pd.date_range(
-        start=start_date,
-        end=end_date,
-        freq="MS"
+def clone_repository(repo_url, destination):
+    """Clone a repository if it does not already exist."""
+
+    if destination.exists():
+        print("  Repository already cloned.")
+        return
+
+    print("  Cloning repository...")
+
+    subprocess.run(
+        [
+            "git",
+            "clone",
+            "--filter=blob:none",
+            "--no-checkout",
+            repo_url,
+            str(destination),
+        ],
+        check=True,
     )
 
-    return months
 
+def get_monthly_commits(repository_path):
+    """Extract commit counts grouped by month."""
 
-def count_commits(client, owner, repo, start, end):
-    """Count commits between two dates."""
+    result = subprocess.run(
+        [
+            "git",
+            "-C",
+            str(repository_path),
+            "log",
+            "--all",
+            "--date=format:%Y-%m",
+            "--format=%ad",
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
 
-    page = 1
-    total = 0
+    months = [
+        line.strip()
+        for line in result.stdout.splitlines()
+        if line.strip()
+    ]
 
-    while True:
-        data = client.get(
-            f"/repos/{owner}/{repo}/commits",
-            params={
-                "since": start.isoformat(),
-                "until": end.isoformat(),
-                "per_page": 100,
-                "page": page,
-            },
-        )
-
-        if not data:
-            break
-
-        total += len(data)
-
-        if len(data) < 100:
-            break
-
-        page += 1
-
-        time.sleep(0.1)
-
-    return total
+    return Counter(months)
 
 
 def main():
-    print("Starting historical activity pilot...")
+
+    print("Starting OSSurvive historical activity collector v2...")
 
     repos = pd.read_csv(REPO_FILE)
 
-    # Deterministic pilot sample
     pilot = repos.sample(
         n=min(PILOT_REPOS, len(repos)),
-        random_state=42
+        random_state=42,
     )
 
-    Path("data/historical").mkdir(
-        parents=True,
-        exist_ok=True
-    )
+    CLONE_DIR.mkdir(parents=True, exist_ok=True)
+    OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
 
-    client = GitHubClient()
-
-    results = []
+    all_results = []
 
     for _, repo in pilot.iterrows():
 
+        full_name = repo["full_name"]
         owner = repo["owner"]
         name = repo["name"]
 
-        created = pd.to_datetime(repo["created_at"], utc=True)
-        end_date = pd.Timestamp.now(tz="UTC")
+        print(f"\nProcessing: {full_name}")
 
-        print(f"\nProcessing: {repo['full_name']}")
+        repository_path = CLONE_DIR / f"{owner}__{name}"
 
-        months = get_months(
-            created,
-            end_date
+        repo_url = f"https://github.com/{owner}/{name}.git"
+
+        clone_repository(
+            repo_url,
+            repository_path,
         )
 
-        for i, month in enumerate(months):
+        monthly_commits = get_monthly_commits(
+            repository_path
+        )
 
-            month_start = month
+        created = pd.to_datetime(
+            repo["created_at"],
+            utc=True,
+        )
 
-            if i + 1 < len(months):
-                month_end = months[i + 1]
-            else:
-                month_end = end_date
+        # Convert to a timezone-naive month start.
+        created_month = pd.Timestamp(
+            created.year,
+            created.month,
+            1,
+        )
 
-            print(
-                f"  {month_start.strftime('%Y-%m')}",
-                end=" ... "
+        end_month = (
+            pd.Timestamp.now()
+            .to_period("M")
+            .start_time
+        )
+
+        months = pd.date_range(
+            start=created_month,
+            end=end_month,
+            freq="MS",
+        )
+
+        for month in months:
+
+            month_key = month.strftime("%Y-%m")
+
+            all_results.append(
+                {
+                    "repo_id": repo["repo_id"],
+                    "full_name": full_name,
+                    "language": repo["language"],
+                    "month": month_key,
+                    "commits": monthly_commits.get(
+                        month_key,
+                        0,
+                    ),
+                }
             )
 
-            commits = count_commits(
-                client,
-                owner,
-                name,
-                month_start,
-                month_end
-            )
+        print(
+            f"  Months reconstructed: {len(months)}"
+        )
 
-            print(f"{commits} commits")
+        print(
+            f"  Total commits found: "
+            f"{sum(monthly_commits.values())}"
+        )
 
-            results.append({
-                "repo_id": repo["repo_id"],
-                "full_name": repo["full_name"],
-                "language": repo["language"],
-                "month": month_start.strftime("%Y-%m"),
-                "commits": commits,
-            })
+    df = pd.DataFrame(all_results)
 
-    df = pd.DataFrame(results)
+    df = df.sort_values(
+        ["repo_id", "month"]
+    )
 
     df.to_csv(
         OUTPUT_FILE,
-        index=False
+        index=False,
     )
 
-    print("\nPilot complete!")
-    print(f"Rows collected: {len(df)}")
-    print(f"Saved to: {OUTPUT_FILE}")
+    print("\n===================================")
+    print("Historical collection complete")
+    print("===================================")
+
+    print(
+        f"Repositories: "
+        f"{df['repo_id'].nunique()}"
+    )
+
+    print(
+        f"Rows: {len(df)}"
+    )
+
+    print(
+        f"Output: {OUTPUT_FILE}"
+    )
 
     print("\nPreview:")
-    print(df.head(20).to_string(index=False))
+
+    print(
+        df.head(20).to_string(index=False)
+    )
 
 
 if __name__ == "__main__":
