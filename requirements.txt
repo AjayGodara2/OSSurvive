@@ -1,6 +1,8 @@
-requests
-python-dotenv
-pandas
-lifelines
-scikit-learn
 streamlit
+pandas
+numpy
+matplotlib
+scikit-learn
+lifelines
+python-dotenv
+requests
