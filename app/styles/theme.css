@@ -1,0 +1,519 @@
+/* ============================================================
+   OSSURVIVE — SIDEBAR SPACING FIX
+   ============================================================ */
+
+:root {
+    --oss-forest: #20392d;
+    --oss-olive: #929f73;
+    --oss-cream: #f6f3ec;
+}
+
+
+/* ============================================================
+   MAIN APP
+   ============================================================ */
+
+.stApp {
+    background: var(--oss-cream);
+}
+
+[data-testid="stAppViewContainer"] {
+    background: var(--oss-cream);
+}
+
+[data-testid="stHeader"] {
+    background: transparent;
+}
+
+
+/* ============================================================
+   SIDEBAR
+   ============================================================ */
+
+[data-testid="stSidebar"] {
+    background: var(--oss-olive);
+    border-right: none;
+}
+
+[data-testid="stSidebar"] > div:first-child {
+    background: var(--oss-olive);
+}
+
+[data-testid="stSidebarContent"] {
+    padding: 0.5rem 1.25rem 0.75rem 1.25rem;
+}
+
+
+/* ============================================================
+   BRAND
+   ============================================================ */
+
+[data-testid="stSidebar"] h2 {
+    color: var(--oss-forest);
+    font-size: 1.15rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.25rem 0;
+}
+
+[data-testid="stSidebar"] p {
+    color: #304235;
+}
+
+
+/* ============================================================
+   DIVIDER
+   ============================================================ */
+
+[data-testid="stSidebar"] hr {
+    border-color: rgba(32, 57, 45, 0.22);
+    margin: 0.9rem 0;
+}
+
+
+/* ============================================================
+   RESEARCH LABEL
+   ============================================================ */
+
+[data-testid="stSidebar"] [data-testid="stCaptionContainer"] {
+    color: #334437;
+    font-size: 0.70rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.35rem;
+}
+
+
+/* ============================================================
+   NAVIGATION LINKS
+   ============================================================ */
+
+[data-testid="stSidebar"] .stPageLink {
+    margin: 0;
+}
+
+[data-testid="stSidebar"] .stPageLink a {
+    color: #26382d;
+    border-radius: 8px;
+    padding: 0.48rem 0.6rem;
+    font-size: 0.84rem;
+    font-weight: 500;
+    min-height: 0;
+    transition: background 0.2s ease;
+}
+
+
+/* Hover */
+
+[data-testid="stSidebar"] .stPageLink a:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #1e3227;
+}
+
+
+/* Active */
+
+[data-testid="stSidebar"] .stPageLink a[aria-current="page"] {
+    background: rgba(255, 255, 255, 0.23);
+    color: #20352a;
+    font-weight: 700;
+}
+
+
+/* ============================================================
+   SIDEBAR ICONS
+   ============================================================ */
+
+[data-testid="stSidebar"] .stPageLink svg {
+    color: #304b39;
+}
+
+
+/* ============================================================
+   REMOVE EXTRA FOOTER
+   ============================================================ */
+
+[data-testid="stSidebar"] footer {
+    display: none;
+}
+
+
+/* ============================================================
+   REDUCE STREAMLIT ELEMENT SPACING
+   ============================================================ */
+
+[data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+    gap: 0.35rem;
+}
+
+
+/* ============================================================
+   SIDEBAR TOP CONTROL
+   ============================================================ */
+
+[data-testid="stSidebarCollapseButton"] {
+    margin-top: 0.2rem;
+}
+
+/* ============================================================
+   OSSURVIVE — HERO
+   ============================================================ */
+
+.oss-hero {
+    position: relative;
+
+    min-height: 390px;
+
+    overflow: hidden;
+
+    margin-top: 0.8rem;
+
+    border: 1px solid #d9ddd0;
+    border-radius: 0 0 18px 18px;
+
+    background:
+        linear-gradient(
+            115deg,
+            #f2f5eb 0%,
+            #e9eee2 50%,
+            #dce6d4 100%
+        );
+
+    box-shadow:
+        0 18px 35px rgba(42, 57, 48, 0.08);
+}
+
+
+/* ============================================================
+   HERO CONTENT
+   ============================================================ */
+
+.oss-hero-content {
+    position: relative;
+
+    z-index: 5;
+
+    padding: 4.5rem 3.5rem 3rem;
+
+    max-width: 700px;
+}
+
+.oss-eyebrow {
+    font-size: 0.72rem;
+
+    letter-spacing: 0.16em;
+
+    font-weight: 750;
+
+    color: #55705d;
+}
+
+.oss-hero h1 {
+    margin: 0.7rem 0 0.4rem;
+
+    font-size: clamp(4.2rem, 7vw, 6.3rem);
+
+    line-height: 0.95;
+
+    letter-spacing: -0.075em;
+
+    font-weight: 850;
+
+    color: #20352a;
+}
+
+.oss-hero-description {
+    max-width: 570px;
+
+    margin: 0 0 1.5rem;
+
+    font-size: 1.12rem;
+
+    line-height: 1.55;
+
+    color: #354940;
+}
+
+
+/* ============================================================
+   HERO BUTTONS
+   ============================================================ */
+
+.oss-hero-actions {
+    display: flex;
+
+    align-items: center;
+
+    gap: 0.8rem;
+}
+
+.oss-primary-button,
+.oss-secondary-button {
+    display: inline-flex;
+
+    align-items: center;
+
+    gap: 0.4rem;
+
+    padding: 0.78rem 1.2rem;
+
+    border-radius: 11px;
+
+    font-size: 0.84rem;
+
+    font-weight: 700;
+
+    user-select: none;
+}
+
+.oss-primary-button {
+    background: #20392d;
+
+    color: #ffffff;
+}
+
+.oss-secondary-button {
+    background: rgba(255, 255, 255, 0.78);
+
+    color: #20392d;
+
+    border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.oss-primary-button span {
+    font-size: 1rem;
+}
+
+
+/* ============================================================
+   LANDSCAPE
+   ============================================================ */
+
+.oss-landscape {
+    position: absolute;
+
+    right: 0;
+
+    bottom: 0;
+
+    width: 57%;
+
+    height: 100%;
+
+    overflow: hidden;
+}
+
+
+/* ============================================================
+   SUN
+   ============================================================ */
+
+.oss-sun {
+    position: absolute;
+
+    top: 38px;
+
+    right: 38%;
+
+    width: 78px;
+
+    height: 78px;
+
+    border-radius: 50%;
+
+    background: #fff7d9;
+}
+
+
+/* ============================================================
+   LANDSCAPE
+   ============================================================ */
+
+.oss-landscape {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+
+    width: 58%;
+    height: 100%;
+
+    overflow: hidden;
+}
+
+
+/* ============================================================
+   SUN
+   ============================================================ */
+
+.oss-sun {
+    position: absolute;
+
+    top: 46px;
+    right: 39%;
+
+    width: 80px;
+    height: 80px;
+
+    border-radius: 50%;
+
+    background: #fff6d5;
+}
+
+
+/* ============================================================
+   BACK MOUNTAINS
+   ============================================================ */
+
+.oss-mountain {
+    position: absolute;
+
+    bottom: -20px;
+
+    width: 0;
+    height: 0;
+}
+
+
+/* Far back */
+
+.oss-mountain-1 {
+    left: 4%;
+
+    border-left: 150px solid transparent;
+    border-right: 150px solid transparent;
+    border-bottom: 170px solid #d1dcc8;
+}
+
+
+/* Middle */
+
+.oss-mountain-2 {
+    left: 31%;
+
+    border-left: 175px solid transparent;
+    border-right: 175px solid transparent;
+    border-bottom: 205px solid #b9c9b1;
+}
+
+
+/* Front */
+
+.oss-mountain-3 {
+    left: 57%;
+
+    border-left: 190px solid transparent;
+    border-right: 190px solid transparent;
+    border-bottom: 175px solid #9bad8d;
+}
+
+
+/* ============================================================
+   FOREGROUND RIDGE
+   ============================================================ */
+
+.oss-landscape::after {
+    content: "";
+
+    position: absolute;
+
+    left: -5%;
+    bottom: -45px;
+
+    width: 115%;
+    height: 125px;
+
+    background: #91a479;
+
+    border-radius: 50% 50% 0 0;
+
+    transform: rotate(-2deg);
+}
+
+
+/* ============================================================
+   TREES
+   ============================================================ */
+
+.oss-forest {
+    position: absolute;
+
+    z-index: 5;
+
+    left: 8%;
+    bottom: 8px;
+
+    width: 110%;
+
+    white-space: nowrap;
+
+    font-size: 34px;
+
+    letter-spacing: 14px;
+
+    color: #315b43;
+}
+
+
+/* ============================================================
+   HERO MESSAGE
+   ============================================================ */
+
+.oss-hero-message {
+    position: absolute;
+
+    z-index: 8;
+
+    right: 3.5%;
+
+    top: 5rem;
+
+    color: #20352a;
+
+    font-family: Georgia, serif;
+
+    font-style: italic;
+
+    font-size: 1.55rem;
+
+    line-height: 1.05;
+
+    transform: rotate(-4deg);
+}
+
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 1000px) {
+
+    .oss-landscape {
+        opacity: 0.4;
+
+        width: 70%;
+    }
+
+    .oss-hero-message {
+        display: none;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .oss-hero-content {
+        padding: 3rem 1.5rem;
+    }
+
+    .oss-hero h1 {
+        font-size: 4rem;
+    }
+
+    .oss-hero-description {
+        font-size: 1rem;
+    }
+
+    .oss-hero-actions {
+        flex-wrap: wrap;
+    }
+}

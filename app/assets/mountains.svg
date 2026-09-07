@@ -1,0 +1,191 @@
+<svg
+    width="1200"
+    height="700"
+    viewBox="0 0 1200 700"
+    xmlns="http://www.w3.org/2000/svg"
+>
+
+    <!-- sky -->
+    <rect
+        width="1200"
+        height="700"
+        fill="#EAE2D6"
+    />
+
+    <!-- subtle sun -->
+    <circle
+        cx="940"
+        cy="150"
+        r="72"
+        fill="#F7F2EB"
+        opacity="0.7"
+    />
+
+    <!-- distant mountain -->
+    <path
+        d="
+            M0 500
+            L120 390
+            L205 450
+            L335 270
+            L450 405
+            L555 320
+            L690 450
+            L820 300
+            L970 430
+            L1080 350
+            L1200 470
+            L1200 700
+            L0 700
+            Z
+        "
+        fill="#D4DCC9"
+    />
+
+    <!-- main mountain -->
+    <path
+        d="
+            M0 610
+            L170 465
+            L275 535
+            L500 155
+            L730 495
+            L820 415
+            L1010 555
+            L1100 485
+            L1200 555
+            L1200 700
+            L0 700
+            Z
+        "
+        fill="#98A682"
+    />
+
+    <!-- mountain shadow -->
+    <path
+        d="
+            M500 155
+            L730 495
+            L620 410
+            L555 340
+            L500 155
+            Z
+        "
+        fill="#7F8F69"
+        opacity="0.72"
+    />
+
+    <!-- snow -->
+    <path
+        d="
+            M500 155
+            L450 245
+            L480 225
+            L505 255
+            L530 215
+            L565 260
+            L730 495
+            L620 365
+            L560 280
+            Z
+        "
+        fill="#F7F2EB"
+    />
+
+    <!-- foreground -->
+    <path
+        d="
+            M0 590
+            Q210 550 390 600
+            Q600 650 790 595
+            Q1000 540 1200 590
+            L1200 700
+            L0 700
+            Z
+        "
+        fill="#788A61"
+    />
+
+    <!-- research trail -->
+    <path
+        d="
+            M115 625
+            C245 565
+            315 590
+            385 515
+            C440 455
+            455 385
+            500 325
+            C555 385
+            600 475
+            700 510
+            C790 540
+            900 565
+            1050 625
+        "
+        fill="none"
+        stroke="#F7F2EB"
+        stroke-width="6"
+        stroke-linecap="round"
+        stroke-dasharray="12 16"
+        opacity="0.9"
+    />
+
+    <!-- observation point 1 -->
+    <circle
+        cx="385"
+        cy="515"
+        r="12"
+        fill="#F7F2EB"
+        stroke="#667452"
+        stroke-width="5"
+    />
+
+    <!-- observation point 2 -->
+    <circle
+        cx="500"
+        cy="325"
+        r="14"
+        fill="#F7F2EB"
+        stroke="#667452"
+        stroke-width="5"
+    />
+
+    <!-- observation point 3 -->
+    <circle
+        cx="700"
+        cy="510"
+        r="12"
+        fill="#F7F2EB"
+        stroke="#667452"
+        stroke-width="5"
+    />
+
+    <!-- contour lines -->
+    <path
+        d="
+            M40 540
+            C190 500 290 525 390 550
+            C500 575 600 590 720 560
+            C860 525 980 525 1160 560
+        "
+        fill="none"
+        stroke="#B5BEA1"
+        stroke-width="2"
+        opacity="0.65"
+    />
+
+    <path
+        d="
+            M50 570
+            C200 535 290 555 400 580
+            C530 610 650 620 760 585
+            C900 545 1020 550 1170 580
+        "
+        fill="none"
+        stroke="#B5BEA1"
+        stroke-width="2"
+        opacity="0.5"
+    />
+
+</svg>
